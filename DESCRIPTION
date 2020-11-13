@@ -1,0 +1,10 @@
+Package: AlcoholicLiverDisease
+Type: Package
+Title: Alcoholic liver disease treatment effects
+Version: 0.0.1
+Date: 2020-09-15
+Author: Andreas Teufel, Timo Itzel
+Maintainer: Timo Itzel <Timo.Itzel@medma.uni-heidelberg.de>
+Description: An R package containing the code for the Alcoholic liver disease study.
+Depends: SqlRender, DatabaseConnector, survival
+License: ...
