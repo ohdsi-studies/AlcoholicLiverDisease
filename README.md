@@ -1,13 +1,13 @@
 Alcoholic Liver Disease (ALD): Medication and clinical parameters associated with course of disease
 =============
 
-<img src="https://img.shields.io/badge/Study%20Status-Repo%20Created-lightgray.svg" alt="Study Status: Repo Created">
+<img src="https://img.shields.io/badge/Study%20Status-Started-blue.svg" alt="Study Status: Started">
 
 - Analytics use case(s): **Characterization, Population-Level Estimation**
 - Study type: **Clinical Application**
 - Tags: **Liver, Alcoholic liver disease, Drug, Gender**
-- Study lead: **Prof. Dr. Andreas Teufel, Medical Faculty Mannheim, Heidelberg University, Germany**
-- Study lead forums tag: **[[Lead tag]](https://forums.ohdsi.org/u/[Lead tag])**
+- Study lead: **Prof. Dr. Dr. Andreas Teufel, Medical Faculty Mannheim, Heidelberg University, Germany**
+- Study lead forums tag: **[[Andreas Teufel]](https://forums.ohdsi.org/u/Andreas)**
 - Study start date: **-**
 - Study end date: **-**
 - Protocol: **[Here](https://github.com/titzel/AlcoholicLiverDisease/blob/master/documents/Protocol.docx)**
@@ -16,7 +16,8 @@ Alcoholic Liver Disease (ALD): Medication and clinical parameters associated wit
 
 Within this study we are interested in investigating new treatment options for patients with alcoholic liver disease respectively inside different sub groups as well as gender specific in respect of the overall survival of the patients.
 
-==How to run==
+How to run
+===========
 
 1. Requirements for executing this package:
    - DatabaseConnector ( >= 2.1.4 )
