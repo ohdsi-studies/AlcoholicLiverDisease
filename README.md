@@ -7,10 +7,10 @@ Alcoholic Liver Disease (ALD): Medication and clinical parameters associated wit
 - Study type: **Clinical Application**
 - Tags: **Liver, Alcoholic liver disease, Drug, Gender**
 - Study lead: **Prof. Dr. Dr. Andreas Teufel, Medical Faculty Mannheim, Heidelberg University, Germany**
-- Study lead forums tag: **[[Andreas Teufel]](https://forums.ohdsi.org/u/Andreas)**
+- Study lead forums tag: **[Andreas Teufel](https://forums.ohdsi.org/u/Andreas)**
 - Study start date: **-**
 - Study end date: **-**
-- Protocol: **[Here](https://github.com/titzel/AlcoholicLiverDisease/blob/master/documents/Protocol.docx)**
+- Protocol: **[Here](https://github.com/ohdsi-studies/AlcoholicLiverDisease/blob/master/documents/Protocol.docx)**
 - Publications: **-**
 - Results explorer: **-**
 
