@@ -1,6 +1,7 @@
 execute <- function(connectionDetails,  sourceName) {
 
 	execute <- function(connectionDetails,  studyName, sourceName, inputFile) {
+	    start <- Sys.time()
 	    default_options <- options(warn = 1)
             dir.create(file.path(tempdir(), studyName, sourceName), recursive=T, showWarnings=F)
 	    logfile <- file(file.path(tempdir(), studyName, sourceName, "log.txt"))
@@ -107,6 +108,8 @@ execute <- function(connectionDetails,  sourceName) {
     
 	    setwd(old)
 
+	    end <- Sys.time()
+	    print(end - start)
 	    invisible(lst)
 	}
 
