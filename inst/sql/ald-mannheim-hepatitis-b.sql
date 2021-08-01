@@ -350,31 +350,32 @@ WHERE rn = 1;
 	        SELECT concept_id FROM  #@studyName_Codesets WHERE codeset_id = 2
 	);
 
+-- code below replaces original code to eliminate LOJ error in BigQuery
+-- Michael Kahn (Michael.Kahn@cuanschutz.edu)
+
+
 -- *************************************************************
 -- *************transaminases*********************************
 -- *************************************************************
 
-SELECT person_id, measurement_concept_id, measurement_date, value_as_number, unit_concept_id
+SELECT m.person_id, measurement_concept_id, measurement_date, value_as_number, unit_concept_id
 INTO #@sourceName_@studyName_trans
-FROM measurement
-WHERE person_id IN
-(
-	SELECT person_id FROM #@studyName_events WHERE measurement_concept_id IN (@trlist) AND person_id=#@studyName_events.person_id
-
-);
+FROM measurement m join #@studyName_events e on m.person_id = e.person_id
+WHERE measurement_concept_id IN (@trlist)
+;
 
 -- ********************************************
 -- *************MELD score**********************
 -- ********************************************
 
-SELECT person_id, measurement_concept_id, measurement_date, value_as_number, unit_concept_id
+SELECT m.person_id, measurement_concept_id, measurement_date, value_as_number, unit_concept_id
 INTO #@sourceName_@studyName_meld
-FROM measurement
-WHERE person_id IN
-(
-	SELECT person_id FROM #@studyName_events WHERE person_id=#@studyName_events.person_id AND measurement_concept_id=@meldlist /*@meldlist*/ ---this concept is to select for MELD score
-)
+FROM measurement m join #@studyName_events e on m.person_id = e.person_id
+WHERE measurement_concept_id=@meldlist /*@meldlist*/ ---this concept is to select for MELD score
 ORDER BY person_id ASC;
+
+-- End of modified code
+
 
 
 -- *****************************************************************
