@@ -29,7 +29,11 @@ How to run
 
    - with the devtools package inside a R session it could be done with
       ```r
-         devtools::install_github("ohdsi-studies/AlcoholicLiverDesease")
+         devtools::install_github("ohdsi-studies/AlcoholicLiverDisease")
+      ```
+      If you get the error message: "No CurrentVersion entry in Software/JavaSoft registry!", use the following command
+      ```r
+         devtools::install_github("ohdsi-studies/AlcoholicLiveDisease, INSTALL_opts="--no-multiarch")
       ```
    - from the command line on linux machines it could be done with
       ```bash
