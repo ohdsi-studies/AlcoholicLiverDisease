@@ -83,6 +83,12 @@ execute <- function(connectionDetails,  sourceName) {
 	    ingredients_survival(population.male, ingredients_select, file.path(studyName, sourceName, "drugs", "male"))
 	    ingredients_survival(population.female, ingredients_select, file.path(studyName, sourceName, "drugs", "female"))
 
+	    ### Combined Ingredients
+	    ingredients_combinations(population, ingredients, file.path(studyName, sourceName, "drugs-combination", "complete"))
+            ingredients_combinations(population.male, ingredients, file.path(studyName, sourceName, "drugs-combination", "male"))
+            ingredients_combinations(population.female, ingredients, file.path(studyName, sourceName, "drugs-combination", "female"))
+
+
 	    combined_feature_test(
 			population, 
 			ingredients_select, 
@@ -96,6 +102,7 @@ execute <- function(connectionDetails,  sourceName) {
 	    lst$population <- population
 
 	    writeLines(capture.output(sessionInfo()), logfile)
+	    writeLines(paste("Platform separator:", .Platform$file.sep), logfile)
 
 
 	    #### zip data
@@ -114,12 +121,14 @@ execute <- function(connectionDetails,  sourceName) {
 	}
 
 	
-	execute(connectionDetails,  "nohep", sourceName, inputFile=system.file("sql", "ald-mannheim-no-hepatitis.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
+	lst <- execute(connectionDetails,  "nohep", sourceName, inputFile=system.file("sql", "ald-mannheim-no-hepatitis.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
 	execute(connectionDetails,  "hepB",  sourceName, inputFile=system.file("sql", "ald-mannheim-hepatitis-b.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
 	execute(connectionDetails,  "hepC",  sourceName, inputFile=system.file("sql", "ald-mannheim-hepatitis-c.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
 
 	cat("\n\nExecution is finished!\n---------------------\n\nPlease transfer following files:\n")
 	cat(paste(" * ", grep("zip$", dir(tempdir(), full.names=T), value=T, ignore.case=T), "\n", sep="", collapse=""))
         cat("\nThank you for providing the data!\n")
+
+	invisible(lst)
 
 }
