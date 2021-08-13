@@ -1,8 +1,10 @@
 survival_analysis <-
 function(group, population, descr="REPLACE", path="", con=stdout()) {
 
+    group <- group[match(population$PERSON_ID, names(group))]
+
     tryCatch({
-            group <- group[match(population$PERSON_ID, names(group))]
+#            group <- group[match(population$PERSON_ID, names(group))]
             if (length(unique(group)) > 1) {
 	            population <- cbind(population, GROUP=group)
 
@@ -28,16 +30,16 @@ function(group, population, descr="REPLACE", path="", con=stdout()) {
 	            legend("bottomright", legend=sprintf("Log-rank p: %.3f", pval), bty="n")
 	            dev.off()
 
-	            writeLines(paste(c(descr, sdiff$n, sdiff$obs, sdiff$exp, pval), sep="\t", collapse="\t"), con=con)
+	            writeLines(paste(c(descr, table(group), sdiff$n, sdiff$obs, sdiff$exp, pval), sep="\t", collapse="\t"), con=con)
     
 	            list(sdiff, sfit)
 	    } else {
-		    writeLines(paste(c(descr, as.vector(table(group)), NA), collapse="\t"), con=con)
+		    writeLines(paste(c(descr, as.vector(table(group)), "group <= 1"), collapse="\t"), con=con)
 	    }
 	}, error=function(e) {
 		if(!dir.exists(file.path(tempdir(), path))) dir.create(file.path(tempdir(), path), recursive=TRUE, showWarnings=F)
 		writeLines(as.character(e), file.path(tempdir(), path, sprintf("error-survival-%s.txt", descr)))
-		writeLines(paste(c(descr, NA), collapse="\t"), con=con)
+		writeLines(paste(c(descr, table(group), "error", as.character(e)), collapse="\t"), con=con)
 	}
     )
 }
