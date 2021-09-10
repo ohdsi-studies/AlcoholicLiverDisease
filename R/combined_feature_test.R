@@ -26,7 +26,7 @@ combined_feature_test <- function(population, ingredients, select_feature, basep
                         colnames(res) <- c("Pattern_int", "KEY", colnames(select_feature))
 			return(res)
 		}), 
-		file.path(tempdir(), basepath, "KEY-summary.csv"), 
+		file.path(tempdir(), basepath, "KEY-summary.xls"), 
 		sep="\t", quote=T, row.names=F
 	)
 
@@ -35,9 +35,9 @@ combined_feature_test <- function(population, ingredients, select_feature, basep
 	dir.create(file.path(tempdir(), basepath, "features", "female"), recursive=T, showWarnings=F)
 
         con = list(
-		complete=file(file.path(tempdir(), basepath, "features", "complete", "000_Summary.csv"), "w"),
-		male=file(file.path(tempdir(), basepath, "features", "male", "000_Summary.csv"), "w"),
-		female=file(file.path(tempdir(), basepath, "features", "female", "000_Summary.csv"), "w")
+		complete=file(file.path(tempdir(), basepath, "features", "complete", "000_Summary.xls"), "w"),
+		male=file(file.path(tempdir(), basepath, "features", "male", "000_Summary.xls"), "w"),
+		female=file(file.path(tempdir(), basepath, "features", "female", "000_Summary.xls"), "w")
 	)
 	print("lapply")	
         lapply(select_run_pattern, function(rpattern, select_feature, population, ingredients, basepath, con) {
@@ -54,15 +54,15 @@ print(path)
 			population.female <- population[population$GENDER == 8532, ]
 
 			group <- factor(c(1,2, population$idx+1), labels=c("Other", "Selected"))[-c(1,2)]
-		        names(group) <- population$PERSON_ID
+		        names(group) <- population[[getIDColName(population)]]
 		        survival_analysis(group, population, paste(c("complete", key_build(rpattern, select_feature)), collapse="_"), path=file.path(basepath, "features", "complete"), con=con$complete)
 
 			group <- factor(c(1,2,population.male$idx+1), labels=c("Other", "Selected"))[-c(1,2)]
-		        names(group) <- population.male$PERSON_ID
+		        names(group) <- population.male[[getIDColName(population.male)]]
 		        survival_analysis(group, population.male, paste(c("male", key_build(rpattern, select_feature)), collapse="_"), path=file.path(basepath, "features", "male"), con=con$male)
 
 			group <- factor(c(1,2,population.female$idx+1), labels=c("Other", "Selected"))[-c(1,2)] 
-		        names(group) <- population.female$PERSON_ID
+		        names(group) <- population.female[[getIDColName(population.female)]]
 		        survival_analysis(group, population.female, paste(c("female", key_build(rpattern, select_feature)), collapse="_"), path=file.path(basepath, "features", "female"), con=con$female)
 
 			population <- population[idx,]

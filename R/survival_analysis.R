@@ -1,7 +1,7 @@
 survival_analysis <-
 function(group, population, descr="REPLACE", path="", con=stdout()) {
 
-    group <- group[match(population$PERSON_ID, names(group))]
+    group <- group[match(population[[getIDColName(population)]], names(group))]
 
     tryCatch({
 #            group <- group[match(population$PERSON_ID, names(group))]
@@ -38,7 +38,7 @@ function(group, population, descr="REPLACE", path="", con=stdout()) {
 	    }
 	}, error=function(e) {
 		if(!dir.exists(file.path(tempdir(), path))) dir.create(file.path(tempdir(), path), recursive=TRUE, showWarnings=F)
-		writeLines(as.character(e), file.path(tempdir(), path, sprintf("error-survival-%s.txt", descr)))
+#		writeLines(as.character(e), file.path(tempdir(), path, sprintf("error-survival-%s.txt", descr)))
 		writeLines(paste(c(descr, table(group), "error", as.character(e)), collapse="\t"), con=con)
 	}
     )

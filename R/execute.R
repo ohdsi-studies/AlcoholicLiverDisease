@@ -1,6 +1,6 @@
-execute <- function(connectionDetails,  sourceName) {
+execute <- function(connectionDetails,  sourceName, schema) {
 
-	execute <- function(connectionDetails,  studyName, sourceName, inputFile) {
+	execute <- function(connectionDetails, schema, studyName, sourceName, inputFile) {
 	    start <- Sys.time()
 	    default_options <- options(warn = 1)
             dir.create(file.path(tempdir(), studyName, sourceName), recursive=T, showWarnings=F)
@@ -35,7 +35,7 @@ execute <- function(connectionDetails,  sourceName) {
 	    # ....
 	    # ....
 
-	    sql <- prepareSql(connectionDetails$dbms, cdmSchema=connectionDetails$schema, studyName=studyName, sourceName=sourceName, inputFile=inputFile)
+	    sql <- prepareSql(connectionDetails$dbms, schema=schema, studyName=studyName, sourceName=sourceName, inputFile=inputFile)
 	    DatabaseConnector::executeSql(conn, SqlRender::readSql(sql))
 
 	    codesets <- exportFromDB(conn, "codesets", connectionDetails$dbms, cdmSchema=connectionDetails$schema, studyName=studyName, sourceName=sourceName)
@@ -53,13 +53,21 @@ execute <- function(connectionDetails,  sourceName) {
 	    feature_list <- c("GI_BLEEDING", "CIRRHOSIS", "BETA_BLOCKERS", "TRANSPLANT", "FIBROSIS", "ENCEPHALOPATHY", "HCC", "ALCINDUCEDORGANICMENTALDISORDER", "SCHIZOPHRENIA", "ASCITES", "HEPATITISB", "HEPATITISC")
 
 	    population <- preparePopulationTable(summary)
-	    write.table(population, file.path(tempdir(), "permitted-files", studyName, sourceName, "population.csv"), quote=T, sep="\t")
+	    write.table(population, file.path(tempdir(), "permitted-files", studyName, sourceName, "population.xls"), quote=T, sep="\t")
 
 	    summary_information(population, feature_list, file.path(studyName, sourceName))
 
-	    print(file.path(tempdir(), "permitted-files", studyName, sourceName, "codesets.csv"))
-	    print(file.path(tempdir(), studyName, sourceName, "codesets.csv"))
-	    print(file.rename(file.path(tempdir(), "permitted-files", studyName, sourceName, "codesets.csv"), file.path(tempdir(), studyName, sourceName, "codesets.csv")))
+	    print(file.path(tempdir(), "permitted-files", studyName, sourceName, "codesets.xls"))
+	    print(file.path(tempdir(), studyName, sourceName, "codesets.xls"))
+	    print(file.rename(file.path(tempdir(), "permitted-files", studyName, sourceName, "codesets.xls"), file.path(tempdir(), studyName, sourceName, "codesets.xls")))
+
+	    print(colnames(summary))
+	    print(colnames(population))
+	    print(colnames(drugs))
+	    print(do.call(rbind, lapply(summary, function(x) data.frame("class"=class(x), "NA"=sum(is.na(x)), "NaN"=sum(is.nan(x)), "NULL"=sum(is.null(x)), "INF"=sum(is.infinite(x))))))
+	    print(unlist(lapply(population, class)))
+	    print(unlist(lapply(drugs, class)))
+
 
 	    # MALE: concept_id = 8507
 	    # FEMALE: concept_id = 8532
@@ -68,7 +76,7 @@ execute <- function(connectionDetails,  sourceName) {
 	    population.female <- population[population$GENDER == 8532, ]
 
 	    group <- factor(population$GENDER)
-	    names(group) <- population$PERSON_ID
+	    names(group) <- population[[getIDColName(population)]]
 	    survival_analysis(group, population, "Gender", file.path(studyName, sourceName, "summary"))
 
 	    ### Summary survival analysis
@@ -121,9 +129,9 @@ execute <- function(connectionDetails,  sourceName) {
 	}
 
 	
-	lst <- execute(connectionDetails,  "nohep", sourceName, inputFile=system.file("sql", "ald-mannheim-no-hepatitis.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
-	execute(connectionDetails,  "hepB",  sourceName, inputFile=system.file("sql", "ald-mannheim-hepatitis-b.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
-	execute(connectionDetails,  "hepC",  sourceName, inputFile=system.file("sql", "ald-mannheim-hepatitis-c.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
+	lst <- execute(connectionDetails, schema, "nohep", sourceName, inputFile=system.file("sql", "ald-mannheim-no-hepatitis.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
+	execute(connectionDetails, schema, "hepB",  sourceName, inputFile=system.file("sql", "ald-mannheim-hepatitis-b.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
+	execute(connectionDetails, schema, "hepC",  sourceName, inputFile=system.file("sql", "ald-mannheim-hepatitis-c.sql", package="AlcoholicLiverDisease", mustWork=TRUE))
 
 	cat("\n\nExecution is finished!\n---------------------\n\nPlease transfer following files:\n")
 	cat(paste(" * ", grep("zip$", dir(tempdir(), full.names=T), value=T, ignore.case=T), "\n", sep="", collapse=""))

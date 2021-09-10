@@ -18,7 +18,7 @@ function(conn, tableIdentifier, dbms, ...) {
 
     cat(sprintf("Export table \"%s\"\n", tableName))
 
-    write.table(data, file.path(path, sprintf("%s.csv", tableIdentifier)), quote=T, sep="\t", row.names=FALSE, na="")
+    write.table(data, file.path(path, sprintf("%s.xls", tableIdentifier)), quote=T, sep="\t", row.names=FALSE, na="")
 
     invisible(data)
 

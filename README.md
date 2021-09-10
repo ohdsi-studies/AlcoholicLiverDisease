@@ -51,16 +51,27 @@ How to run
           server = "localhost",         # URL / IP
           user = "<user>",              # user for connection
           password = "<password>",      # password for connection
-          schema="<schema>",            # DB schema
-          port = "1433"                 # port
       )
 
       execute(
           connectionDetails,
-          sourceName="abbreviation"     # Abbreviation for the origin of DB
+          sourceName="abbreviation",    # Abbreviation for the origin of DB
+          schema="<schema>"             # Schema name of the DB
       )
    ```
    The parameter sourceName is only used to connect the results with the origin. Therefore, please provide your institution or DB abbreviation as the sourceName parameter. 
+
+   Depending on the package version of "DatabaseConnector", the schema version is removed within the function "createConnectionDetails". Therefore, the schema parameter is includd into the "execute" function.
+
+   Example configuration:
+   - dbms = "sql server":
+      server = "<URL>"           # "localhost"
+      schema = "<DB>.<schema>"   # "testdb.dbo"
+
+   - dbms = "posgresql"
+      server = "<URL>/<DB>"      # "localhost/testdb"
+      schema = "<schema>"        # "public"
+
 
 4. Once the execution is finished, the results will be placed as ZIP files inside the temporary directory of the R session. Please send them back to the study coordinator.
 

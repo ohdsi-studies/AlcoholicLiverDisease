@@ -2,7 +2,7 @@ summary_information <- function(population, feature_list, path) {
         path <- file.path(tempdir(), path)
         dir.create(path, showWarnings=F, recursive=T)
 
-	con <- file(file.path(path, "summary.csv"), "w")
+	con <- file(file.path(path, "summary.xls"), "w")
 	on.exit({ close(con); })
         
 	n_entries <- nrow(population)

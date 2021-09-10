@@ -1,7 +1,7 @@
 {DEFAULT @cdmSchema = 'public' }
 {DEFAULT @studyName = 'LD' }
 {DEFAULT @sourceName = 'source' }
-
+{DEFAULT @schema = '' }
 
 {DEFAULT @conditionlist = '201612' }
 {DEFAULT @condition_exclude_list = '4291005'}
@@ -121,10 +121,10 @@ SELECT 0 as codeset_id, 'conditionlist' as codeset_name, c.concept_id FROM
 	select distinct I.concept_id
 	FROM
 	(
-		select concept_id from CONCEPT where concept_id in (@conditionlist) and invalid_reason is null
+		select concept_id from @schema.CONCEPT where concept_id in (@conditionlist) and invalid_reason is null
 		UNION  select c.concept_id
-		from CONCEPT c
-		join CONCEPT_ANCESTOR ca on c.concept_id = ca.descendant_concept_id
+		from @schema.CONCEPT c
+		join @schema.CONCEPT_ANCESTOR ca on c.concept_id = ca.descendant_concept_id
 		and ca.ancestor_concept_id in (@conditionlist)
 		and c.invalid_reason is null
 
@@ -137,10 +137,10 @@ SELECT -1 as codeset_id, 'condition_exclude_list' as codeset_name, c.concept_id 
         select distinct I.concept_id
         FROM
         (
-                select concept_id from CONCEPT where concept_id in (@condition_exclude_list) and invalid_reason is null
+                select concept_id from @schema.CONCEPT where concept_id in (@condition_exclude_list) and invalid_reason is null
                 UNION  select c.concept_id
-                from CONCEPT c
-                join CONCEPT_ANCESTOR ca on c.concept_id = ca.descendant_concept_id
+                from @schema.CONCEPT c
+                join @schema.CONCEPT_ANCESTOR ca on c.concept_id = ca.descendant_concept_id
                 and ca.ancestor_concept_id in (@condition_exclude_list)
                 and c.invalid_reason is null
 
@@ -153,7 +153,7 @@ SELECT 11 as codeset_id, 'hepatitisB' as codeset_name, c.concept_id FROM
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@hepatitisB) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@hepatitisB) and invalid_reason is null
     ) I
 ) C;
 
@@ -163,7 +163,7 @@ SELECT 12 as codeset_id, 'hepatitisC' as codeset_name, c.concept_id FROM
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@hepatitisC) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@hepatitisC) and invalid_reason is null
     ) I
 ) C;
 
@@ -184,19 +184,19 @@ WITH primary_events (event_id, person_id, start_date, end_date, op_start_date, o
                         from
                         (
                                 select ce.*, ROW_NUMBER() over (PARTITION BY ce.person_id ORDER BY ce.condition_era_start_date, ce.condition_era_id) as ordinal
-                                FROM CONDITION_ERA ce
+                                FROM @schema.CONDITION_ERA ce
                                 where ce.condition_concept_id in (SELECT concept_id from #@studyName_codesets where codeset_id = 0) AND NOT (ce.condition_era_start_date < '2000-01-01')
                         ) C
                         WHERE C.ordinal = 1
                 ) P
         ) P
-        JOIN observation_period OP
+        JOIN @schema.observation_period OP
                 on P.person_id = OP.person_id and P.start_date >=  OP.observation_period_start_date and P.start_date <= op.observation_period_end_date
-        LEFT JOIN (SELECT distinct person_id AS exclude_id FROM CONDITION_ERA WHERE condition_concept_id IN (SELECT concept_id from #@studyName_codesets where codeset_id = -1)) X 
+        LEFT JOIN (SELECT distinct person_id AS exclude_id FROM @schema.CONDITION_ERA WHERE condition_concept_id IN (SELECT concept_id from #@studyName_codesets where codeset_id = -1)) X 
 		ON P.person_id = X.exclude_id
-        LEFT JOIN (SELECT distinct person_id AS has_hep_b FROM CONDITION_ERA WHERE condition_concept_id IN (SELECT concept_id from #@studyName_codesets where codeset_id = 11)) hb 
+        LEFT JOIN (SELECT distinct person_id AS has_hep_b FROM @schema.CONDITION_ERA WHERE condition_concept_id IN (SELECT concept_id from #@studyName_codesets where codeset_id = 11)) hb 
                 ON P.person_id = hb.has_hep_b
-        LEFT JOIN (SELECT distinct person_id AS has_hep_c FROM CONDITION_ERA WHERE condition_concept_id IN (SELECT concept_id from #@studyName_codesets where codeset_id = 12)) hc 
+        LEFT JOIN (SELECT distinct person_id AS has_hep_c FROM @schema.CONDITION_ERA WHERE condition_concept_id IN (SELECT concept_id from #@studyName_codesets where codeset_id = 12)) hc 
                 ON P.person_id = hc.has_hep_c
         WHERE DATEADD(dd, 0, OP.OBSERVATION_PERIOD_START_DATE) <= P.START_DATE AND DATEADD(dd, 0, P.START_DATE) <= OP.OBSERVATION_PERIOD_END_DATE AND P.ordinal = 1
 )
@@ -233,7 +233,7 @@ ORDER BY person_id ASC;
 
 SELECT person_id, death_date
 INTO #@studyName_deaths
-FROM death
+FROM @schema.death
 WHERE person_id in
 (
         SELECT person_id FROM  #@studyName_events WHERE person_id = #@studyName_events.person_id
@@ -263,7 +263,7 @@ DELETE FROM #@studyName_deaths WHERE person_id NOT IN (SELECT person_id FROM #@s
 
 SELECT person_id, gender_concept_id as gender, year_of_birth as birth_year
 INTO #@studyName_info
-FROM person
+FROM @schema.person
 WHERE person_id in
 (
 	SELECT person_id FROM  #@studyName_events WHERE person_id=#@studyName_events.person_id
@@ -279,7 +279,7 @@ FROM
 (
 	select distinct I.concept_id FROM
 	(
-		SELECT concept_id FROM CONCEPT where concept_id in (@gibleedlist) and invalid_reason is null
+		SELECT concept_id FROM @schema.CONCEPT where concept_id in (@gibleedlist) and invalid_reason is null
 	) I
 ) C;
 
@@ -287,7 +287,7 @@ FROM
 /* EQUAL RESULTS */
 WITH GIbleeding_CTE AS (
 	SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, condition_concept_id, 1 as GI_bleeding, condition_era_start_date
-	FROM CONDITION_ERA, #@studyName_events
+	FROM @schema.CONDITION_ERA, #@studyName_events
 	WHERE condition_concept_id in
 	(
 		SELECT concept_id from  #@studyName_codesets where codeset_id = 1
@@ -305,8 +305,8 @@ FROM GIbleeding_CTE WHERE rn = 1;
 SELECT #@studyName_events.person_id, condition_concept_id, 1 as GI_bleeding, condition_era_start_date as GI_bleeding_diagnostic_date , c.concept_name
 INTO #@sourceName_@studyName_GIbleeding
 FROM #@studyName_events
-join condition_era ce on #@studyName_events.person_id=ce.person_id
-join concept c on ce.condition_concept_id = c.concept_id 
+join @schema.condition_era ce on #@studyName_events.person_id=ce.person_id
+join @schema.concept c on ce.condition_concept_id = c.concept_id 
 WHERE condition_concept_id in
 (
 	SELECT concept_id from  #@studyName_codesets where codeset_id = 1
@@ -323,13 +323,13 @@ INSERT INTO #@studyName_codesets (codeset_id, codeset_name, concept_id)
     (
         SELECT DISTINCT I.concept_id FROM
         (
-            SELECT concept_id FROM CONCEPT WHERE concept_id IN (@cirrlist) AND invalid_reason IS NULL
+            SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@cirrlist) AND invalid_reason IS NULL
         ) I
     ) C;
 
 WITH cirrhosis_CTE AS (
     SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, condition_concept_id, 1 as cirrhosis, condition_era_start_date
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
             (SELECT concept_id
                 FROM  #@studyName_codesets
@@ -346,8 +346,8 @@ WHERE rn = 1;
 	SELECT  #@studyName_events.person_id, condition_concept_id, 1 as cirrhosis, condition_era_start_date as cirrhosis_diagnostic_date, c.concept_name
 	INTO #@sourceName_@studyName_cirrhosis
 	FROM #@studyName_events
-	join condition_era ce on #@studyName_events.person_id=ce.person_id
-	join concept c on ce.condition_concept_id=c.concept_id
+	join @schema.condition_era ce on #@studyName_events.person_id=ce.person_id
+	join @schema.concept c on ce.condition_concept_id=c.concept_id
 	WHERE condition_concept_id in
 	(
 	        SELECT concept_id FROM  #@studyName_codesets WHERE codeset_id = 2
@@ -363,7 +363,7 @@ WHERE rn = 1;
 
 SELECT m.person_id, measurement_concept_id, measurement_date, value_as_number, unit_concept_id
 INTO #@sourceName_@studyName_trans
-FROM measurement m join #@studyName_events e on m.person_id = e.person_id
+FROM @schema.measurement m join #@studyName_events e on m.person_id = e.person_id
 WHERE measurement_concept_id IN (@trlist)
 ;
 
@@ -373,7 +373,7 @@ WHERE measurement_concept_id IN (@trlist)
 
 SELECT m.person_id, measurement_concept_id, measurement_date, value_as_number, unit_concept_id
 INTO #@sourceName_@studyName_meld
-FROM measurement m join #@studyName_events e on m.person_id = e.person_id
+FROM @schema.measurement m join #@studyName_events e on m.person_id = e.person_id
 WHERE measurement_concept_id=@meldlist /*@meldlist*/ ---this concept is to select for MELD score
 ORDER BY person_id ASC;
 
@@ -387,10 +387,10 @@ ORDER BY person_id ASC;
 INSERT INTO #@studyName_codesets (codeset_id, codeset_name, concept_id)
 SELECT 3 as codeset_id, 'bblist' as codeset_name, c.concept_id FROM (select distinct I.concept_id FROM
 (
-  SELECT concept_id FROM CONCEPT where concept_id in (@bblist) and invalid_reason is null
+  SELECT concept_id FROM @schema.CONCEPT where concept_id in (@bblist) and invalid_reason is null
   UNION  SELECT c.concept_id
-  FROM CONCEPT c
-  JOIN CONCEPT_ANCESTOR ca on c.concept_id = ca.descendant_concept_id
+  FROM @schema.CONCEPT c
+  JOIN @schema.CONCEPT_ANCESTOR ca on c.concept_id = ca.descendant_concept_id
   AND ca.ancestor_concept_id in (@bblist)
   AND c.invalid_reason IS NULL
 
@@ -399,7 +399,7 @@ SELECT 3 as codeset_id, 'bblist' as codeset_name, c.concept_id FROM (select dist
 
 WITH beta_blocker_CTE AS (
     SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as beta_blocker
-    FROM drug_exposure, #@studyName_events
+    FROM @schema.drug_exposure, #@studyName_events
     WHERE drug_concept_id in
     (
 	SELECT concept_id FROM #@studyName_codesets WHERE codeset_id = 3
@@ -422,8 +422,8 @@ WITH CTE_drugs AS
 	SELECT DISTINCT de.person_id, de.drug_concept_id, concept.concept_name
 	, de.drug_exposure_start_date as drug_dates, s.start_date as diagnosis_date --TF added lines but the distinct drug_dates is exploding the table
 	---if not all drug time stamps are needed, we might want to take just the min drug date that comes after the diagnosis date 
-	FROM drug_exposure de
-	LEFT JOIN concept
+	FROM @schema.drug_exposure de
+	LEFT JOIN @schema.concept
 		ON de.drug_concept_id=concept.concept_id
 	JOIN #@studyName_events s on s.person_id=de.person_id --TF added line to be able to condition on diagnosis date
 	WHERE
@@ -441,9 +441,9 @@ WITH CTE_drugs AS
 SELECT CTE_drugs.*, concept_ancestor.ancestor_concept_id, concept.concept_name as ingredient_name, concept.concept_class_id
 INTO #@sourceName_@studyName_drugs
 FROM CTE_drugs
-LEFT JOIN concept_ancestor
+LEFT JOIN @schema.concept_ancestor
 	ON CTE_drugs.drug_concept_id = concept_ancestor.descendant_concept_id 
-LEFT JOIN concept
+LEFT JOIN @schema.concept
 	ON concept_ancestor.ancestor_concept_id = concept.concept_id
 WHERE concept.concept_class_id = 'Ingredient'
 ORDER BY CTE_drugs.person_id, concept.concept_name;
@@ -464,14 +464,14 @@ SELECT 4  as codeset_id, 'transplantlist' as codeset_name, c.concept_id FROM
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@transplantlist) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@transplantlist) and invalid_reason is null
     ) I
 ) C;
 
 
 WITH transplant_CTE AS (
 	SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as transplant
-	FROM procedure_occurrence, #@studyName_events
+	FROM @schema.procedure_occurrence, #@studyName_events
 	WHERE procedure_concept_id in
 	(
 		SELECT concept_id from  #@studyName_codesets where codeset_id = 4
@@ -494,14 +494,14 @@ SELECT 5  as codeset_id, 'fibrosislist' as codeset_name, c.concept_id FROM
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@fibrosislist) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@fibrosislist) and invalid_reason is null
     ) I
 ) C;
 
 
 WITH fibrosis_CTE AS (
         SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as fibrosis
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
         (
                 SELECT concept_id from  #@studyName_codesets where codeset_id = 5
@@ -523,14 +523,14 @@ SELECT 6 as codeset_id, 'encephalopathylist' as codeset_name, c.concept_id FROM
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@encephalopathylist) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@encephalopathylist) and invalid_reason is null
     ) I
 ) C;
 
 
 WITH encephalopathy_CTE AS (
         SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as encephalopathy
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
         (
                 SELECT concept_id from  #@studyName_codesets where codeset_id = 6
@@ -552,14 +552,14 @@ SELECT 7 as codeset_id, 'HCClist' as codeset_name, c.concept_id FROM
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@HCClist) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@HCClist) and invalid_reason is null
     ) I
 ) C;
 
 
 WITH HCC_CTE AS (
         SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as HCC
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
         (
                 SELECT concept_id from  #@studyName_codesets where codeset_id = 7
@@ -583,14 +583,14 @@ SELECT 8 as codeset_id, 'AlcInducedOrganicMentalDisorderlist' as codeset_name, c
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@AlcInducedOrganicMentalDisorderlist) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@AlcInducedOrganicMentalDisorderlist) and invalid_reason is null
     ) I
 ) C;
 
 
 WITH AlcIDis_CTE AS (
         SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as AlcInducedOrganicMentalDisorder
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
         (
                 SELECT concept_id from  #@studyName_codesets where codeset_id = 8
@@ -613,14 +613,14 @@ SELECT 9 as codeset_id, 'Schizophrenialist' as codeset_name, c.concept_id FROM
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@Schizophrenialist) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@Schizophrenialist) and invalid_reason is null
     ) I
 ) C;
 
 
 WITH Schizophrenia_CTE AS (
         SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as Schizophrenia
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
         (
                 SELECT concept_id from  #@studyName_codesets where codeset_id = 9
@@ -643,14 +643,14 @@ SELECT 10 as codeset_id, 'asciteslist' as codeset_name, c.concept_id FROM
 (
     SELECT DISTINCT I.concept_id FROM
     (
-        SELECT concept_id FROM CONCEPT WHERE concept_id IN (@asciteslist) and invalid_reason is null
+        SELECT concept_id FROM @schema.CONCEPT WHERE concept_id IN (@asciteslist) and invalid_reason is null
     ) I
 ) C;
 
 
 WITH ascites_CTE AS (
         SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as ascites
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
         (
                 SELECT concept_id from  #@studyName_codesets where codeset_id = 10
@@ -680,7 +680,7 @@ WHERE rn=1;
 
 WITH hepatitisB_CTE AS (
         SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as hepatitisB
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
         (
                 SELECT concept_id from  #@studyName_codesets where codeset_id = 11
@@ -710,7 +710,7 @@ WHERE rn=1;
 
 WITH hepatitisC_CTE AS (
         SELECT ROW_NUMBER() OVER (PARTITION BY #@studyName_events.person_id ORDER BY #@studyName_events.person_id) as rn, #@studyName_events.person_id, 1 as hepatitisC
-        FROM condition_era, #@studyName_events
+        FROM @schema.condition_era, #@studyName_events
         WHERE condition_concept_id in
         (
                 SELECT concept_id from  #@studyName_codesets where codeset_id = 12
@@ -771,7 +771,7 @@ ORDER BY cast(#@studyName_events.person_id as int) ASC;
 SELECT #@studyName_codesets.codeset_id, #@studyName_codesets.codeset_name, concept.*
 INTO #@sourceName_@studyName_codesets
 FROM #@studyName_codesets 
-LEFT JOIN concept
+LEFT JOIN @schema.concept
 on #@studyName_codesets.concept_id = concept.concept_id;
 
 SELECT * 
