@@ -64,14 +64,18 @@ How to run
    Depending on the package version of "DatabaseConnector", the schema version is removed within the function "createConnectionDetails". Therefore, the schema parameter is includd into the "execute" function.
 
    Example configuration:
-   - dbms = "sql server":
-      server = "<URL>"           # "localhost"
-      schema = "<DB>.<schema>"   # "testdb.dbo"
-
-   - dbms = "posgresql"
-      server = "<URL>/<DB>"      # "localhost/testdb"
-      schema = "<schema>"        # "public"
-
+   - "sql server":
+      ```r
+         dbms = "sql server":
+         server = "<URL>"           # "localhost"
+         schema = "<DB>.<schema>"   # "testdb.dbo"
+      ```
+   - "postgresql":
+      ```r
+         dbms = "posgresql"
+         server = "<URL>/<DB>"      # "localhost/testdb"
+         schema = "<schema>"        # "public"
+      ```
 
 4. Once the execution is finished, the results will be placed as ZIP files inside the temporary directory of the R session. Please send them back to the study coordinator.
 
